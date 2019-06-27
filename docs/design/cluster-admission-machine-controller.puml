@@ -5,7 +5,8 @@ start;
 
 repeat
   :Machine controller enqueues a Create call;
-  if (Cluster has ready annotation) then (yes)
+  :Get control plane machines for cluster;
+  if (A control plane machine is ready) then (yes)
     if (Machine has control plane role) then (yes)
       #LightBlue:Join as control plane member;
     else (no)
@@ -13,11 +14,14 @@ repeat
     endif
   else (no)
     if (Machine has control plane role) then (yes)
-      #LightBlue:Create control plane config map;
+      :Create control plane config map;
       if (Control plane config map already exists) then (yes)
         #Pink:Return RequeueError;
       else (no)
         #LightBlue:Init control plane;
+        #LightBlue:Set ready status on Machine annotation;
+        #LightBlue:Patch Machine back to API server;
+        #LightBlue:Delete control plane config map;
       endif
     else (no)
       #Pink:Return RequeueError;
